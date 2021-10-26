@@ -20,6 +20,9 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);    
+    #endif
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "testing", nullptr, nullptr);
     if (window == nullptr) 
@@ -42,9 +45,9 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     ShaderProg shader_prog(
-    #ifdef APPLE    
-        "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\vertex.glsl", 
-        "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\fragment.glsl"    
+    #ifdef __APPLE__    
+        "/Users/Kevin/Development/OpenGL/Testing/src/vertex.glsl",
+        "/Users/Kevin/Development/OpenGL/Testing/src/fragment.glsl"
     #elif defined(WIN32)
         "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\vertex.glsl", 
         "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\fragment.glsl"     
@@ -69,13 +72,13 @@ int main()
 
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
+
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -93,7 +96,8 @@ int main()
 
         shader_prog.UseProgram();
         glBindVertexArray(VAO);
-        
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
