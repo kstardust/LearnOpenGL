@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "shader_prog.h"
@@ -86,6 +87,7 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);    
 
+    int ufColorLocation = glGetUniformLocation(shader_prog.GetProgram(), "ufColor");
 
     while (!glfwWindowShouldClose(window)) 
     {
@@ -95,6 +97,9 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader_prog.UseProgram();
+        float green = (sin(glfwGetTime()) / 2.0f + 0.5f);
+
+        glUniform4f(ufColorLocation, 0.0f, green, 0.0f, 1.0f);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     
