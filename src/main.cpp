@@ -2,6 +2,9 @@
 #include <math.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_access.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "shader_prog.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -113,7 +116,7 @@ int main()
   #ifdef __APPLE__
     "/Users/Kevin/Development/OpenGL/Testing/textures/";
   #elif defined(WIN32)
-    "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\vertex.glsl";
+    "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\textures\\";
   #endif
 
   int width, height, n_channels;
@@ -164,9 +167,13 @@ int main()
   shader_prog.SetInt("ufTexture", 0);  
   shader_prog.SetInt("ufTexture2", 1);
 
+  glm::mat4 trans = glm::mat4(1.0f);
+  
   while (!glfwWindowShouldClose(window)) {
     process_input(window);
     
+    auto trans = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "transform"), 1, GL_FALSE, glm::value_ptr(trans));
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
 

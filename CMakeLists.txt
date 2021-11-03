@@ -9,6 +9,7 @@ if (APPLE)
   find_package(glfw3 REQUIRED)  
 elseif (WIN32)
   set(GLAD_DIR "C:/Users/liqilong/Desktop/OpenGL/glad/")
+  set(GLM_LIBRARY "C:/Users/liqilong/Desktop/OpenGL/lib/glm.lib")
   set(GLFW3_LIBRARY "C:/Users/liqilong/Desktop/OpenGL/lib/glfw3.lib")
   set(GLFW3_INCLUDE_DIR "C:/Users/liqilong/Desktop/OpenGL/include")
 endif()
@@ -28,5 +29,5 @@ list(APPEND SOURCE_FILES
   )
 
 add_executable(main ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(main ${GLFW3_LIBRARY})
+target_link_libraries(main ${GLFW3_LIBRARY} ${GLM_LIBRARY})
 
