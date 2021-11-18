@@ -30,7 +30,7 @@ int main()
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   #ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   #endif
 
   GLFWwindow* window = glfwCreateWindow(800, 600, "testing", nullptr, nullptr);
@@ -212,13 +212,23 @@ int main()
   glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));  
 
+  glm::vec3 cubePositions[] = {
+    glm::vec3( 0.0f,  0.0f,  0.0f), 
+    glm::vec3( 2.0f,  5.0f, -15.0f), 
+    glm::vec3(-1.5f, -2.2f, -2.5f),  
+    glm::vec3(-3.8f, -2.0f, -12.3f),  
+    glm::vec3( 2.4f, -0.4f, -3.5f),  
+    glm::vec3(-1.7f,  3.0f, -7.5f),  
+    glm::vec3( 1.3f, -2.0f, -2.5f),  
+    glm::vec3( 1.5f,  2.0f, -2.5f), 
+    glm::vec3( 1.5f,  0.2f, -1.5f), 
+    glm::vec3(-1.3f,  1.0f, -1.5f)  
+  };
+ 
   while (!glfwWindowShouldClose(window)) {
-    process_input(window);
-    
-    glm::mat4 trans = glm::mat4(1.0f);    
-    trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-    
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+    process_input(window);    
+
+    //glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "transform"), 1, GL_FALSE, glm::value_ptr(trans));
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -236,11 +246,29 @@ int main()
      
     glBindVertexArray(VAO);
 
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for (const auto &p : cubePositions) {
+      auto trans = glm::translate(glm::mat4(1.0f), p);
+      trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.3f, 1.0f));
+      glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "model"), 1, GL_FALSE, glm::value_ptr(trans));
+      // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
     
     glfwSwapBuffers(window);
     glfwPollEvents();
+
+#ifdef __APPLE__
+    // https://github.com/glfw/glfw/issues/1334
+    static bool macMoved = false;
+
+    if(!macMoved) {
+      int x, y;
+      glfwGetWindowPos(window, &x, &y);
+      glfwSetWindowPos(window, ++x, y);
+      macMoved = true;
+    }
+#endif
+    
   }
   glfwTerminate();
   return 0;
