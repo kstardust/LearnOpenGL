@@ -10,10 +10,54 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+const int Width = 800;
+const int Height = 600;
+const double CursorSensitivity = .1f;
+
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 float cameraSpeed = 1.0f;
+double fov = 45.0f;
+float yaw = -90.f;
+float pitch = 0;
+
+double xMousePos = Width / 2.f;
+double yMousePos = Height / 2.f;
+bool firstMouse = true;
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+  if (firstMouse) {
+    xMousePos = xpos;
+    yMousePos = ypos;
+    firstMouse = false;    
+  }
+
+  float xoffset = xpos - xMousePos;
+  float yoffset = yMousePos - ypos;
+  xMousePos = xpos;
+  yMousePos = ypos;    
+
+  yaw += xoffset * CursorSensitivity;
+  pitch += yoffset * CursorSensitivity;
+
+  if (pitch < -89.f) {
+    pitch = -89.f;
+  } else if (pitch > 89.f) {
+    pitch = 89.f;
+  }
+
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+  fov -= yoffset;
+  if (fov < 1.0f)
+    fov = 1.0f;
+  if (fov > 60.0f)
+    fov = 60.0f;
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -53,7 +97,7 @@ int main()
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   #endif
 
-  GLFWwindow* window = glfwCreateWindow(800, 600, "testing", nullptr, nullptr);
+  GLFWwindow* window = glfwCreateWindow(Width, Height, "testing", nullptr, nullptr);
   if (window == nullptr) 
   {   
     std::cout << "Failed to create window" << std::endl;
@@ -69,9 +113,11 @@ int main()
     return -1;
   }
 
-  glViewport(0, 0, 800, 600);  
+  glViewport(0, 0, Width, Height);  
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetScrollCallback(window, scroll_callback);
+  glfwSetCursorPosCallback(window, mouse_callback);
 
   ShaderProg shader_prog(
   #ifdef __APPLE__  
@@ -219,11 +265,8 @@ int main()
   shader_prog.SetInt("ufTexture2", 1);
 
   glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-  // glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 1.0f, 100.0f);
-  
+  // glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));  
   glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-  glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));  
 
   glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
@@ -247,8 +290,20 @@ int main()
     process_input(window, delta);    
 
     //glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+    
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+    cameraFront = glm::normalize(direction);
+
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));    
+
+    glm::mat4 projection = glm::perspective(glm::radians(static_cast<float>(fov)), 800.0f/600.0f, 1.0f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));  
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
 
