@@ -10,16 +10,36 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float cameraSpeed = 1.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
   glViewport(0, 0, width, height);
 }  
 
-void process_input(GLFWwindow *window)
+void process_input(GLFWwindow *window, float deltaTime)
 {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    cameraPos += cameraFront * cameraSpeed * deltaTime;
+  }   
+
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    cameraPos -= cameraFront * cameraSpeed * deltaTime;
+  } 
+
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed * deltaTime;
+  }
 }
 
 int main()
@@ -107,12 +127,6 @@ int main()
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f    
   };
 
-  float tex_coords[] = {
-    0.0f, 0.0f,
-    1.0f, 0.0f,
-    0.5f, 1.0f
-  };
-
   float border_color[] = {
     1.0f, 1.0f, 0.0f, 1.0f
   };
@@ -143,7 +157,7 @@ int main()
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);  
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
@@ -205,11 +219,10 @@ int main()
   shader_prog.SetInt("ufTexture2", 1);
 
   glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+  // glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 1.0f, 100.0f);
   
   glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-  glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));
   glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));  
 
   glm::vec3 cubePositions[] = {
@@ -224,11 +237,18 @@ int main()
     glm::vec3( 1.5f,  0.2f, -1.5f), 
     glm::vec3(-1.3f,  1.0f, -1.5f)  
   };
- 
+  
+  float lastFrame = glfwGetTime();
+
   while (!glfwWindowShouldClose(window)) {
-    process_input(window);    
+    float now = glfwGetTime();
+    float delta = now - lastFrame;
+    lastFrame = now;
+    process_input(window, delta);    
 
     //glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "transform"), 1, GL_FALSE, glm::value_ptr(trans));
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "view"), 1, GL_FALSE, glm::value_ptr(view));    
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
 
