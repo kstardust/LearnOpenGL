@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "shader_prog.h"
 
 ShaderProg::ShaderProg(std::string vertex_shader_path, std::string frag_shader_path)
@@ -124,4 +126,14 @@ void ShaderProg::SetFloat(const std::string& name, float value)
 void ShaderProg::SetInt(const std::string& name, int value)
 {
     glUniform1i(glGetUniformLocation(m_program_id, name.c_str()), value);
+}
+
+void ShaderProg::SetVec3f(const std::string& name, const glm::vec3 &vec)
+{
+    glUniform3fv(glGetUniformLocation(m_program_id, name.c_str()), 1, glm::value_ptr(vec));
+}
+
+void ShaderProg::SetMat4(const std::string &name, const glm::mat4 &matrix)
+{
+    glUniformMatrix4fv(glGetUniformLocation(m_program_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix)); 
 }

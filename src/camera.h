@@ -18,6 +18,7 @@ enum class CameraDirection {
     BACK,
     LEFT,
     RIGHT,
+    None,
 };
 
 class Camera {

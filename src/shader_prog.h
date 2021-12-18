@@ -15,6 +15,8 @@ class ShaderProg {
         bool UseProgram();
         void SetFloat(const std::string &name, float value);
         void SetInt(const std::string &name, int value);                        
+        void SetVec3f(const std::string &name, const glm::vec3&);
+        void SetMat4(const std::string &name, const glm::mat4&);
     private:
         void Init();
         void ReadFile(std::string file_path, unsigned char **buff);

@@ -18,6 +18,9 @@ double xMousePos = Width / 2.f;
 double yMousePos = Height / 2.f;
 bool firstMouse = true;
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightColor(1.0f);
+
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void mouse_callback(GLFWwindow *window, double xpos, double ypos)
@@ -51,10 +54,10 @@ void process_input(GLFWwindow *window, float deltaTime)
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
 
-  CameraDirection dir;
+  CameraDirection dir = CameraDirection::None;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     dir = CameraDirection::FOWARD;
-  }   
+  } else
 
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
     dir = CameraDirection::BACK;
@@ -68,7 +71,9 @@ void process_input(GLFWwindow *window, float deltaTime)
     dir = CameraDirection::RIGHT;    
   }
 
-  camera.ProcessKeyboard(dir, deltaTime);
+  if (dir != CameraDirection::None) {
+    camera.ProcessKeyboard(dir, deltaTime);
+  }
 }
 
 int main()
@@ -112,6 +117,16 @@ int main()
     "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\vertex.glsl", 
     "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\fragment.glsl"   
   #endif
+  );
+
+   ShaderProg light_shader(
+    #ifdef __APPLE__
+      "/Users/Kevin/Development/OpenGL/Testing/src/light_vertex.glsl",
+      "/Users/Kevin/Development/OpenGL/Testing/src/light_fragment.glsl"
+    #elif defined(WIN32)
+      "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\light_vertex.glsl",
+      "c:\\Users\\liqilong\\Desktop\\OpenGL\\Testing\\src\\light_fragment.glsl"
+    #endif
   );
 
   float vertices[] = {
@@ -191,6 +206,14 @@ int main()
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
+  unsigned int ligthVAO;
+  glGenVertexArrays(1, &ligthVAO);
+
+  glBindVertexArray(ligthVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+
   // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
   // glEnableVertexAttribArray(2);
 
@@ -249,9 +272,11 @@ int main()
   shader_prog.SetInt("ufTexture", 0);  
   shader_prog.SetInt("ufTexture2", 1);
 
+  shader_prog.SetVec3f("lightColor", lightColor);
+  shader_prog.SetVec3f("objColor", glm::vec3(1.0f, 0.5f, 0.31f));
+
   glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-  // glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));  
-  glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+  shader_prog.SetMat4("model", model);
 
   glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f), 
@@ -274,11 +299,16 @@ int main()
     lastFrame = now;
     process_input(window, delta);    
 
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
- 
+    shader_prog.UseProgram();
+    shader_prog.SetMat4("view", camera.GetViewMatrix());
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), 800.0f/600.0f, 1.0f, 100.0f);
-    glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));  
+    shader_prog.SetMat4("projection", projection);
 
+    light_shader.UseProgram();
+    light_shader.SetMat4("view", camera.GetViewMatrix());
+    light_shader.SetMat4("projection", projection);
+    light_shader.SetVec3f("lightColor", lightColor);
+  
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -299,11 +329,16 @@ int main()
     for (const auto &p : cubePositions) {
       auto trans = glm::translate(glm::mat4(1.0f), p);
       trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.3f, 1.0f));
-      glUniformMatrix4fv(glGetUniformLocation(shader_prog.GetProgram(), "model"), 1, GL_FALSE, glm::value_ptr(trans));
+      shader_prog.SetMat4("model", trans);
       // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
       glDrawArrays(GL_TRIANGLES, 0, 36);
     }
-    
+
+    light_shader.UseProgram();
+    light_shader.SetMat4("model", glm::scale(glm::translate(glm::mat4(1.0), lightPos), glm::vec3(0.2f)));
+    glBindVertexArray(ligthVAO);    
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
 
