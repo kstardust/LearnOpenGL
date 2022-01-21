@@ -13,6 +13,11 @@ glm::mat4 Camera::GetViewMatrix()
   return glm::lookAt(_pos, _pos + _front, _up);
 }
 
+glm::vec3 Camera::GetPosition()
+{
+  return _pos;
+}
+
 void Camera::ProcessKeyboard(CameraDirection dir, float deltaTime)
 {
   switch (dir) {

@@ -29,6 +29,7 @@ public:
   void ProcessMouseScroll(float offset);
   void ProcessMouseMove(float xoffset, float yoffset);
   void ProcessKeyboard(CameraDirection, float deltaTime);    
+  glm::vec3 GetPosition();
  private:
   glm::vec3 _front;
   glm::vec3 _worldUp;
