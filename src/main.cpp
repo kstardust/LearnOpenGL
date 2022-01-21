@@ -18,6 +18,7 @@ double xMousePos = Width / 2.f;
 double yMousePos = Height / 2.f;
 bool firstMouse = true;
 
+const float LightRotatingRadius = 5.0f;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 glm::vec3 lightColor(1.0f);
 
@@ -316,7 +317,6 @@ int main()
 
   shader_prog.SetVec3f("lightColor", lightColor);
   shader_prog.SetVec3f("objColor", glm::vec3(1.0f, 0.5f, 0.31f));
-  shader_prog.SetVec3f("lightPos", lightPos);
 
   glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   shader_prog.SetMat4("model", model);
@@ -348,6 +348,10 @@ int main()
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), 800.0f/600.0f, 1.0f, 100.0f);
     shader_prog.SetMat4("projection", projection);
 
+    lightPos.x = sin(glfwGetTime()) * LightRotatingRadius;
+    lightPos.z = cos(glfwGetTime()) * LightRotatingRadius;
+    shader_prog.SetVec3f("lightPos", lightPos);
+  
     light_shader.UseProgram();
     light_shader.SetMat4("view", camera.GetViewMatrix());
     light_shader.SetMat4("projection", projection);
@@ -360,7 +364,7 @@ int main()
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     shader_prog.UseProgram();
-    float green = (sin(glfwGetTime()) / 2.0f + 0.5f);
+    float green = (sin(glfwGetTime()) / 2.0f + 0.5f);    
 
     glUniform4f(ufColorLocation, 0.0f, green, 0.0f, 1.0f);
     glActiveTexture(GL_TEXTURE0);
