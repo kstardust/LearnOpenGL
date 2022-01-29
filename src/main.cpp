@@ -20,7 +20,6 @@ bool firstMouse = true;
 
 const float LightRotatingRadius = 5.0f;
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-glm::vec3 lightColor(1.0f);
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -315,9 +314,21 @@ int main()
   shader_prog.SetInt("ufTexture", 0);  
   shader_prog.SetInt("ufTexture2", 1);
 
-  shader_prog.SetVec3f("lightColor", lightColor);
-  shader_prog.SetVec3f("objColor", glm::vec3(1.0f, 0.5f, 0.31f));
+  // shader_prog.SetVec3f("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+  // shader_prog.SetVec3f("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+  // shader_prog.SetVec3f("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+  // shader_prog.SetFloat("material.shininess", 32.0f);
 
+  shader_prog.SetVec3f("material.ambient", glm::vec3(.0f, .5f, .31f));
+  shader_prog.SetVec3f("material.diffuse", glm::vec3(.0f, .5f, .31f));
+  shader_prog.SetVec3f("material.specular", glm::vec3(.5f, .5f, .5f));
+  shader_prog.SetFloat("material.shininess", 32.0f);
+  
+  shader_prog.SetVec3f("light.lightPos", lightPos);
+  shader_prog.SetVec3f("light.ambient", glm::vec3(0.1f, 0.1f, 0.1f));  
+  shader_prog.SetVec3f("light.diffuse", glm::vec3(0.3f, 0.3f, 0.3f));
+  shader_prog.SetVec3f("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+  
   glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
   shader_prog.SetMat4("model", model);
 
@@ -343,6 +354,15 @@ int main()
     process_input(window, delta);    
 
     shader_prog.UseProgram();
+
+    glm::vec3 lightColor;
+    lightColor.x = sin(glfwGetTime() * 2.0f);
+    lightColor.y = sin(glfwGetTime() * 0.7f);
+    lightColor.z = sin(glfwGetTime() * 1.3f);
+
+    shader_prog.SetVec3f("light.ambient", lightColor * glm::vec3(0.2f));
+    shader_prog.SetVec3f("light.diffuse", lightColor * glm::vec3(0.5f));
+    
     shader_prog.SetMat4("view", camera.GetViewMatrix());
     shader_prog.SetVec3f("viewPos", camera.GetPosition());
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), 800.0f/600.0f, 1.0f, 100.0f);
@@ -355,7 +375,6 @@ int main()
     light_shader.UseProgram();
     light_shader.SetMat4("view", camera.GetViewMatrix());
     light_shader.SetMat4("projection", projection);
-    light_shader.SetVec3f("lightColor", lightColor);
   
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);  
     glClear(GL_COLOR_BUFFER_BIT);
